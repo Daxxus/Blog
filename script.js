@@ -8,16 +8,15 @@ const btnLeft = document.querySelector(".btnLeft")
 const btnRight = document.querySelector(".btnRight")
 const tbody = document.querySelector("#data")
 const select = document.querySelector("#select")
-let page = 0
-let trArray = []
-let selectArray = []
 
+let trArray = []
 let pageSize = 5
 let currentPage = 1
 let paggArray = []
 
 const fetchingData = async () => {
 	const API = `https://jsonplaceholder.typicode.com/comments`
+
 	try {
 		const resp = await fetch(API)
 		const data = await resp.json()
@@ -62,6 +61,119 @@ const nextPage = () => {
 	}
 }
 
+const rows = () => {
+	const dataRows = document.querySelectorAll("tbody > tr")
+	Array.from(dataRows).forEach((el) => {
+		const inputChecked = el.lastElementChild.firstChild
+		if (inputChecked.checked) {
+			// const indexArray = dataRows.indexOf(el)
+			// dataRows.splice(indexArray, 1) //out of array
+			el.remove()
+		}
+	})
+}
+
+const curseWord = () => {
+	trArray.forEach((el) => {
+		const [...t] = el
+		t.forEach((el) => {
+			const middleChild = el.querySelector("#email")
+			const curseName = new RegExp("alias", "i").test(
+				middleChild.previousElementSibling.innerHTML
+			)
+			const curseBody = new RegExp("harum", "i").test(
+				middleChild.nextElementSibling.innerHTML
+			)
+
+			if (curseName || curseBody) {
+				el.firstElementChild.style.backgroundColor = "gold"
+				middleChild.previousElementSibling.style.backgroundColor = "gold"
+				middleChild.nextElementSibling.style.backgroundColor = "gold"
+				middleChild.style.backgroundColor = "gold"
+			}
+		})
+	})
+}
+
+const search = (childIndex, value) => {
+	trArray.forEach((el) => {
+		const [...t] = el
+		t.forEach((el) => {
+			const nameContent = el.childNodes[childIndex].innerHTML
+			const regExpName = new RegExp(value, "i").test(nameContent)
+			regExpName
+				? (el.style.display = "table-row")
+				: (el.style.display = "none")
+		})
+	})
+}
+
+const postsTitle = async () => {
+	const APISelect = `https://jsonplaceholder.typicode.com/posts?_page=&_limit=100`
+
+	try {
+		const resp = await fetch(APISelect)
+		const data = await resp.json()
+		processSelectData(data)
+	} catch (err) {
+		console.error(err)
+	}
+}
+
+const processSelectData = (data) => {
+	select.innerHTML = ` <option value="0" selected disabled>--Posts'title--</option> `
+	data.forEach((post) => {
+		const option = document.createElement("option")
+
+		option.value = post.id
+		option.innerText = post.title
+		select.append(option)
+	})
+}
+
+const getCommentForPosts = async () => {
+	const value = select.value
+	console.log(value)
+	const APISelect = `https://jsonplaceholder.typicode.com/comments?postId=${value}`
+
+	try {
+		const resp = await fetch(APISelect)
+		const data = await resp.json()
+		displayPosts(data)
+	} catch (err) {
+		console.error(err)
+	}
+}
+
+const displayPosts = (post) => {
+	let eachRow
+	tbody.innerHTML = ""
+	Array.from(post).forEach((el) => {
+		eachRow += "<tr>"
+		eachRow += `<td class="align-middle">${el.postId}</td>`
+		eachRow += `<td id="name" class="align-middle ">${el.name}</td>`
+		eachRow += `<td id="email" class="align-middle">${el.email}</td>`
+		eachRow += `<td id="body" class="align-middle">${el.body}</td>`
+		eachRow += `<td><input type="checkbox" id="checkbox"></td>`
+		;("</tr>")
+
+		tbody.innerHTML = eachRow
+	})
+}
+
+btnCheck.addEventListener("click", curseWord)
+btnDelete.addEventListener("click", rows)
+inpName.addEventListener("input", (e) => search(1, e.target.value))
+// inpName.addEventListener("input", searchName)
+inpEmail.addEventListener("input", (e) => search(2, e.target.value))
+inpBody.addEventListener("input", (e) => search(3, e.target.value))
+btnRight.addEventListener("click", nextPage)
+btnLeft.addEventListener("click", prevPage)
+select.addEventListener("click", postsTitle)
+select.addEventListener("change", getCommentForPosts)
+
+fetchingData()
+
 // const comments = async () => {
 // 	// const API = `https://jsonplaceholder.typicode.com/comments`
 // 	const API = `https://jsonplaceholder.typicode.com/comments?_page=${page++}&_limit=2`
@@ -88,120 +200,33 @@ const nextPage = () => {
 // 	})
 // }
 
-const delRows = () => {
-	trArray.forEach((el) => {
-		const [...rowsArray] = el
-		rowsArray.forEach((elem) => {
-			const check = elem.lastElementChild.firstChild
-
-			if (check.checked) {
-				const indexArray = rowsArray.indexOf(elem)
-				rowsArray.splice(indexArray, 1)
-				elem.remove()
-			}
-		})
-	})
-}
-
-const curseWord = () => {
-	trArray.forEach((el) => {
-		const [...t] = el
-		t.forEach((el) => {
-			const middleChild = el.querySelector("#email")
-			const curseName = new RegExp("alias", "i").test(
-				middleChild.previousElementSibling.innerHTML
-			)
-			const curseBody = new RegExp("harum", "i").test(
-				middleChild.nextElementSibling.innerHTML
-			)
-
-			if (curseName || curseBody) {
-				// el.firstElementChild.classList.toggle('active')
-				// middleChild.previousElementSibling.classList.toggle('active')
-				// middleChild.nextElementSibling.classList.toggle('active')
-				// middleChild.classList.toggle('active')
-
-				el.firstElementChild.style.backgroundColor = "gold"
-				middleChild.previousElementSibling.style.backgroundColor = "gold"
-				middleChild.nextElementSibling.style.backgroundColor = "gold"
-				middleChild.style.backgroundColor = "gold"
-			}
-		})
-	})
-}
-
-const searchName = () => {
-	trArray.forEach((el) => {
-		const [...t] = el
-		t.forEach((el) => {
-			const nameContent = el.childNodes[1].innerHTML
-			const regExpName = new RegExp(inpName.value, "i").test(nameContent)
-			regExpName
-				? (el.style.display = "table-row")
-				: (el.style.display = "none")
-		})
-	})
-}
-const searchEmail = () => {
-	trArray.forEach((el) => {
-		const [...t] = el
-		t.forEach((el) => {
-			const emailContent = el.childNodes[2].textContent
-			const regExpEmail = new RegExp(inpEmail.value, "i").test(emailContent)
-			regExpEmail
-				? (el.style.display = "table-row")
-				: (el.style.display = "none")
-		})
-	})
-}
-const searchBody = () => {
-	trArray.forEach((el) => {
-		const [...t] = el
-		t.forEach((el) => {
-			const bodyContent = el.childNodes[3].textContent
-			const regExpBody = new RegExp(inpBody.value, "i").test(bodyContent)
-			regExpBody
-				? (el.style.display = "table-row")
-				: (el.style.display = "none")
-		})
-	})
-}
-
-const postsTitle = async () => {
-	const APISelect = `https://jsonplaceholder.typicode.com/posts?_page=${page++}&_limit=100`
-	try {
-		const resp = await fetch(APISelect)
-		const data = await resp.json()
-		processSelectData(data)
-	} catch (err) {
-		console.error(err)
-	}
-}
-
-const processSelectData = (data) => {
-	data.forEach((post) => {
-		const option = document.createElement("option")
-		option.innerHTML = `
-		<option>${post.title}</option>
-		`
-		select.append(option)
-		selectArray.push(post.title)
-	})
-}
-
-// 	//     Dodaj select który wyświetli tytuły postów, z API
-// 	// a następnie spraw aby po wybraniu postu pokazywały się komentarze tylko do niego (filtrowanie po parametrze postId z /comments)
+// const delRows = () => {
+// 	trArray.forEach((el) => {
+// 		const [...rowsArray] = el
+// 		rowsArray.forEach((elem) => {
+// 			const check = elem.lastElementChild.firstChild
+// 			if (check.checked) {
+// 				const indexArray = rowsArray.indexOf(elem)
+// 				rowsArray.splice(indexArray, 1) //out of array
+// 				elem.remove()
+// 			}
+// 		})
+// 	})
 // }
+// const searchName = search(1, inpName.value)
 
-btnCheck.addEventListener("click", curseWord)
-btnDelete.addEventListener("click", delRows)
-inpName.addEventListener("input", searchName)
-inpEmail.addEventListener("input", searchEmail)
-inpBody.addEventListener("input", searchBody)
-btnRight.addEventListener("click", nextPage)
-btnLeft.addEventListener("click", prevPage)
-select.addEventListener("click", postsTitle)
-
-// comments()
-
-fetchingData()
+//lub poniżej
+// const searchName = () => {
+// 	trArray.forEach((el) => {
+// 		const [...t] = el
+// 		t.forEach((el) => {
+// 			const nameContent = el.childNodes[1].innerHTML
+// 			console.log(nameContent);
+// 			console.log(inpName.value);
+// 			const regExpName = new RegExp(inpName.value, "i").test(nameContent)
+// 			regExpName
+// 				? (el.style.display = "table-row")
+// 				: (el.style.display = "none")
+// 		})
+// 	})
+// }
